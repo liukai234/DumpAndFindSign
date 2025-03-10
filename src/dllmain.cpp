@@ -8,6 +8,47 @@
 #include "mem.h"
 #include "utils.h"
 
+unsigned int hexStringToLittleEndian(const std::string& hexString) {
+	unsigned int result = 0;
+	for (size_t i = hexString.length(); i > 0; i -= 2) {
+		std::string byteString = hexString.substr(i - 2, 2);
+		unsigned int byte;
+		std::istringstream(byteString) >> std::hex >> byte;
+		result = (result << 8) | byte;
+	}
+	return result;
+}
+
+std::string memoryToHexString(const char* memory, SIZE_T size) {
+	std::ostringstream oss;
+	for (SIZE_T i = 0; i < size; ++i) {
+		if (i > 0) {
+			oss << " ";
+		}
+		oss << std::hex << std::uppercase << std::setw(2) << std::setfill('0')
+			<< static_cast<int>(static_cast<unsigned char>(memory[i]));
+	}
+	return oss.str();
+}
+
+void DumpMem(uintptr_t SearchBase, DWORD SearchRange, std::string path) {
+
+    std::ofstream dumpFile(path, std::ios::binary);
+
+    const size_t bufferSize = 4096;
+    char buffer[bufferSize];
+
+    for (size_t i = 0; i < SearchRange; i += bufferSize) {
+        size_t remaining = SearchRange - i;
+        size_t toRead = (remaining < bufferSize) ? remaining : bufferSize;
+
+        auto CurrentAddress = reinterpret_cast<const char *>(SearchBase + i);
+
+        memcpy(buffer, CurrentAddress, toRead);
+        dumpFile.write(buffer, toRead);
+    }
+}
+
 void Init(std::string signature) {
     std::cout << "[Enter] void Init(std::string signature)" << std::endl;
 
@@ -15,14 +56,19 @@ void Init(std::string signature) {
     std::cout << "ImageBase: " << std::hex << ImageBase << std::dec
               << " ImageSize: " << ImageSize << std::endl;
 
-    void *signatureAddress1 =
+    // MemDump
+    // std::cout << "MemDump Start" << std::endl;
+    // DumpMem(ImageBase, ImageSize, "dumper7_memscan.bin");
+    // return;
+
+    void *signatureAddress =
         scan_idastyle((void *)ImageBase, ImageSize, signature);
-    if (!signatureAddress1) {
+    if (!signatureAddress) {
         std::cout << "signature [ " << signature << " ] NOT found" << std::endl;
     }
 
     std::cout << "signature [ " << signature << " ] found: " << std::hex
-              << signatureAddress1 << std::dec << std::endl;
+              << signatureAddress << std::dec << std::endl;
 
     // Locate global var
     const int signatureOffsets = 0x36;
