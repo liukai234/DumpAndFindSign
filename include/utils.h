@@ -1,3 +1,6 @@
+#ifndef UTILS_H
+#define UTILS_H
+
 #include <Windows.h>
 #include <utility>
 
@@ -73,3 +76,5 @@ inline std::pair<uintptr_t, uintptr_t> GetImageBaseAndSize() {
 
     return {ImageBase, NtHeader->OptionalHeader.SizeOfImage};
 }
+
+#endif // UTILS_H
